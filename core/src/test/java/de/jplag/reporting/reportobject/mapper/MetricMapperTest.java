@@ -5,7 +5,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import de.jplag.JPlagComparison;
 import de.jplag.JPlagResult;
 import de.jplag.Submission;
 import de.jplag.options.JPlagOptions;
+import de.jplag.options.SimilarityMetric;
 import de.jplag.reporting.reportobject.model.TopComparison;
 
 public class MetricMapperTest {
@@ -39,7 +41,8 @@ public class MetricMapperTest {
         Map<String, List<Integer>> result = MetricMapper.getDistributions(jPlagResult);
 
         // then
-        Assertions.assertEquals(Map.of("AVG", EXPECTED_AVG_DISTRIBUTION, "MAX", EXPECTED_MAX_DISTRIBUTION), result);
+        Assertions.assertEquals(EXPECTED_AVG_DISTRIBUTION, result.get("AVG"));
+        Assertions.assertEquals(EXPECTED_MAX_DISTRIBUTION, result.get("MAX"));
     }
 
     @Test
@@ -53,13 +56,11 @@ public class MetricMapperTest {
 
         // then
         Assertions.assertEquals(
-                List.of(new TopComparison("1", "2", Map.of("AVG", .7, "MAX", .8)), new TopComparison("3", "4", Map.of("AVG", .3, "MAX", .9))),
-                result);
+                List.of(new TopComparison("1", "2", buildSimilarityMap(.7, .8)), new TopComparison("3", "4", buildSimilarityMap(.3, .9))), result);
     }
 
     private int[] distribution(List<Integer> expectedDistribution) {
         var reversedDistribution = new ArrayList<>(expectedDistribution);
-        Collections.reverse(reversedDistribution);
         return reversedDistribution.stream().mapToInt(Integer::intValue).toArray();
     }
 
@@ -75,6 +76,9 @@ public class MetricMapperTest {
         JPlagResult jPlagResult = mock(JPlagResult.class);
         doReturn(avgDistribution).when(jPlagResult).getSimilarityDistribution();
         doReturn(maxDistribution).when(jPlagResult).getMaxSimilarityDistribution();
+
+        doReturn(Arrays.stream(avgDistribution).boxed().toList()).when(jPlagResult).calculateDistributionFor(SimilarityMetric.AVG);
+        doReturn(Arrays.stream(maxDistribution).boxed().toList()).when(jPlagResult).calculateDistributionFor(SimilarityMetric.MAX);
 
         JPlagOptions options = mock(JPlagOptions.class);
         doReturn(createComparisonsDto.length).when(options).maximumNumberOfComparisons();
@@ -103,6 +107,16 @@ public class MetricMapperTest {
     }
 
     private record CreateSubmission(String name) {
+    }
+
+    private Map<String, Double> buildSimilarityMap(double avg, double max) {
+        Map<String, Double> map = new HashMap<>();
+        for (SimilarityMetric value : SimilarityMetric.values()) {
+            map.put(value.name(), 0d);
+        }
+        map.put(SimilarityMetric.AVG.name(), avg);
+        map.put(SimilarityMetric.MAX.name(), max);
+        return map;
     }
 
 }

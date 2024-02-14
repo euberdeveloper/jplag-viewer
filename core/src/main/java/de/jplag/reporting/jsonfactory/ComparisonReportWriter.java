@@ -1,9 +1,6 @@
 package de.jplag.reporting.jsonfactory;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -56,8 +53,7 @@ public class ComparisonReportWriter {
             String secondSubmissionId = submissionToIdFunction.apply(comparison.secondSubmission());
             String fileName = generateComparisonName(firstSubmissionId, secondSubmissionId);
             addToLookUp(firstSubmissionId, secondSubmissionId, fileName);
-            var comparisonReport = new ComparisonReport(firstSubmissionId, secondSubmissionId,
-                    Map.of(SimilarityMetric.AVG.name(), comparison.similarity(), SimilarityMetric.MAX.name(), comparison.maximalSimilarity()),
+            var comparisonReport = new ComparisonReport(firstSubmissionId, secondSubmissionId, SimilarityMetric.createSimilarityMap(comparison),
                     convertMatchesToReportMatches(comparison));
             resultWriter.addJsonEntry(comparisonReport, fileName);
         }
