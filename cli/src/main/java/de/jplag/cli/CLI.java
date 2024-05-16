@@ -12,6 +12,7 @@ import de.jplag.JPlag;
 import de.jplag.JPlagResult;
 import de.jplag.cli.logger.CliProgressBarProvider;
 import de.jplag.cli.logger.CollectedLoggerFactory;
+import de.jplag.cli.logger.JPlagLoggerBase;
 import de.jplag.cli.picocli.CliInputHandler;
 import de.jplag.exceptions.ExitException;
 import de.jplag.logging.ProgressBarLogger;
@@ -45,6 +46,7 @@ public final class CLI {
         logger.debug("Your version of JPlag is {}", JPlag.JPLAG_VERSION);
 
         if (!this.inputHandler.parse()) {
+            JPlagLoggerBase.currentLogLevel = this.inputHandler.getCliOptions().advanced.logLevel;
             ProgressBarLogger.setProgressBarProvider(new CliProgressBarProvider());
 
             switch (this.inputHandler.getCliOptions().mode) {
