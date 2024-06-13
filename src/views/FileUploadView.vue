@@ -28,7 +28,7 @@
           class="mx-auto mt-10 flex w-96 cursor-pointer flex-col justify-center rounded-md border-1 border-accent-dark bg-accent bg-opacity-25 px-5 py-5"
           @click="uploadFileThroughWindow()"
         >
-          <div>Drag and Drop zip/Json file on this page</div>
+          <div>Drag and Drop zip/Json file on this page {{inputUrl}}</div>
           <div>Or click here to select a file</div>
         </div>
         <div>(No files will be uploaded)</div>
@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { onErrorCaptured, ref, type Ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { router } from '@/router'
 import { store } from '@/stores/store'
 import Button from '@/components/ButtonComponent.vue'
@@ -60,6 +60,7 @@ import LoadingCircle from '@/components/LoadingCircle.vue'
 import { ZipFileHandler } from '@/model/fileHandling/ZipFileHandler'
 import { JsonFileHandler } from '@/model/fileHandling/JsonFileHandler'
 import { BaseFactory } from '@/model/factories/BaseFactory'
+import { syncStringQueryParam } from '@/compositions/syncQueryParam'
 
 store().clearStore()
 
@@ -232,4 +233,13 @@ onErrorCaptured((error) => {
   registerError(error, 'unknown')
   return false
 })
+
+const inputUrl = ref<string | null>(null);
+const { updateRouteQuery } = syncStringQueryParam(
+  inputUrl,
+  useRouter(),
+  useRoute(),
+  'inputUrl'
+);
+updateRouteQuery();
 </script>
