@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { onErrorCaptured, ref, type Ref } from 'vue'
+import { onErrorCaptured, ref, watch, type Ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { router } from '@/router'
 import { store } from '@/stores/store'
@@ -106,6 +106,31 @@ function navigateToOverview() {
   router.push({
     name: 'OverviewView'
   })
+}
+
+async function fetchFileFromUrl(url: string, filename?: string): Promise<File> {
+    try {
+        filename = filename || url.split('/').pop() || new Date().toISOString();
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch file from ${url}: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const file = new File([blob], filename, { type: blob.type });
+        return file;
+    } catch (error) {
+        console.error(`Error downloading file: ${error}`);
+        throw error;
+    }
+}
+
+async function handleUrl(url: string | null): Promise<void> {
+  if (url) {
+    const file = await fetchFileFromUrl(url);
+    await handleFile(file);
+  }
 }
 
 /**
@@ -234,6 +259,7 @@ onErrorCaptured((error) => {
   return false
 })
 
+
 const inputUrl = ref<string | null>(null);
 const { updateRouteQuery } = syncStringQueryParam(
   inputUrl,
@@ -242,4 +268,8 @@ const { updateRouteQuery } = syncStringQueryParam(
   'inputUrl'
 );
 updateRouteQuery();
+
+handleUrl(inputUrl.value);
+
+watch(inputUrl, handleUrl);
 </script>
